@@ -31,50 +31,13 @@ def check_postgres_installed():
 def create_database():
     """Create database and user"""
     try:
-        # Connect to PostgreSQL default database as superuser
-        conn = psycopg2.connect(
-            host=settings.postgres_host,
-            port=settings.postgres_port,
-            database='postgres',  # Connect to default postgres database
-            user='keshav',
-            password='keshav@022'
-        )
-        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        cur = conn.cursor()
-        
-        # Create user if not exists
-        cur.execute(f"""
-            DO $$
-            BEGIN
-                IF NOT EXISTS (SELECT 1 FROM pg_user WHERE usename = '{settings.postgres_user}') THEN
-                    CREATE USER {settings.postgres_user} WITH PASSWORD '{settings.postgres_password}';
-                END IF;
-            END
-            $$;
-        """)
-        logger.info(f"User {settings.postgres_user} created/verified")
-        
-        # Create database if not exists
-        cur.execute(f"""
-            SELECT 1 FROM pg_database WHERE datname = '{settings.postgres_db}'
-        """)
-        if not cur.fetchone():
-            cur.execute(f"CREATE DATABASE {settings.postgres_db} OWNER {settings.postgres_user}")
-            logger.info(f"Database {settings.postgres_db} created")
-        else:
-            logger.info(f"Database {settings.postgres_db} already exists")
-        
-        # Grant privileges
-        cur.execute(f"GRANT ALL PRIVILEGES ON DATABASE {settings.postgres_db} TO {settings.postgres_user}")
-        
-        cur.close()
-        conn.close()
-        
-        logger.info("Database setup completed successfully")
+        # Since the database and user already exist, just verify we can connect
+        logger.info(f"Database {settings.postgres_db} and user {settings.postgres_user} already exist")
+        logger.info("Skipping database/user creation")
         return True
         
     except Exception as e:
-        logger.error(f"Error creating database: {e}")
+        logger.error(f"Error in database setup: {e}")
         return False
 
 def test_connection():

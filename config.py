@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     debug: bool = False
     
     # Authentication
-    bearer_token: str = "679b076ea66e474132c8ea9edcfd3fd06a608834c6ab98900d1bec673ed9fe3c"
+    bearer_token: Optional[str] = None
     
     # OpenAI Configuration
     openai_api_key: Optional[str] = None
@@ -24,16 +24,16 @@ class Settings(BaseSettings):
     
     # Pinecone Configuration
     pinecone_api_key: Optional[str] = None
-    pinecone_environment: str = "us-east-1-aws"
-    pinecone_index_name: str = "countzero"
-    pinecone_dimension: int = 512  # For text-embedding-ada-002
+    pinecone_environment: Optional[str] = None
+    pinecone_index_name: Optional[str] = None
+    pinecone_dimension: int = 1536
     pinecone_metric: str = "cosine"
     
     # PostgreSQL Configuration
-    postgres_host: str = "localhost"
+    postgres_host: Optional[str] = None
     postgres_port: int = 5432
-    postgres_db: str = "countzero"
-    postgres_user: str = "keshav"
+    postgres_db: Optional[str] = None
+    postgres_user: Optional[str] = None
     postgres_password: Optional[str] = None
     
     # Database URL
@@ -53,6 +53,14 @@ class Settings(BaseSettings):
     # Performance Settings
     max_concurrent_requests: int = 10
     request_timeout: int = 120
+    
+    # Testing Configuration
+    ngrok_url: Optional[str] = None
+    api_base_url: str = "http://localhost:8000"
+    
+    # File Server Configuration
+    file_server_dir: str = "data"
+    file_server_port: int = 8001
     
     class Config:
         env_file = ".env"
@@ -74,6 +82,24 @@ def validate_settings():
     
     if not settings.postgres_password:
         errors.append("POSTGRES_PASSWORD is required")
+    
+    if not settings.postgres_host:
+        errors.append("POSTGRES_HOST is required")
+    
+    if not settings.postgres_db:
+        errors.append("POSTGRES_DB is required")
+    
+    if not settings.postgres_user:
+        errors.append("POSTGRES_USER is required")
+    
+    if not settings.pinecone_environment:
+        errors.append("PINECONE_ENVIRONMENT is required")
+    
+    if not settings.pinecone_index_name:
+        errors.append("PINECONE_INDEX_NAME is required")
+    
+    if not settings.bearer_token:
+        errors.append("BEARER_TOKEN is required")
     
     if errors:
         raise ValueError(f"Configuration errors: {', '.join(errors)}")

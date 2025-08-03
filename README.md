@@ -44,15 +44,42 @@ A document processing system that uses GPT-4, Pinecone vector database, and Post
    
    Edit `.env` with your credentials:
    ```env
+   # OpenAI Configuration
    OPENAI_API_KEY=your_openai_api_key_here
+   OPENAI_MODEL=gpt-4
+   OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+   
+   # Pinecone Configuration
    PINECONE_API_KEY=your_pinecone_api_key_here
-   POSTGRES_PASSWORD=your_postgres_password_here
+   PINECONE_ENVIRONMENT=your_pinecone_environment
+   PINECONE_INDEX_NAME=your_pinecone_index_name
+   
+   # PostgreSQL Configuration
+   POSTGRES_HOST=localhost
+   POSTGRES_PORT=5432
+   POSTGRES_DB=your_database_name
+   POSTGRES_USER=your_postgres_user
+   POSTGRES_PASSWORD=your_postgres_password
+   
+   # API Configuration
+   BEARER_TOKEN=your_secure_bearer_token
+   
+   # Testing Configuration (optional)
+   NGROK_URL=https://your-ngrok-url.ngrok-free.app
+   API_BASE_URL=http://localhost:8000
    ```
 
 3. Set up PostgreSQL database:
    ```bash
+   # If using existing PostgreSQL installation (recommended)
+   # Ensure PostgreSQL is running and you have a database created
+   # The application will automatically create tables on first run
+   
+   # Or run the setup script (optional)
    python db_setup.py
    ```
+   
+   **Note**: If you're using Homebrew PostgreSQL on macOS, the default superuser is usually your system username, not `postgres`. Make sure your `.env` file reflects your actual PostgreSQL configuration.
 
 ## Quick Start
 
@@ -68,7 +95,15 @@ A document processing system that uses GPT-4, Pinecone vector database, and Post
 
 2. Test the system:
    ```bash
+   # Set up environment variables for testing
+   export BEARER_TOKEN="your_bearer_token_here"
+   export API_BASE_URL="http://localhost:8000"
+   
+   # Run the test suite
    python test_api.py
+   
+   # Or test manually with the shell script
+   ./test.sh
    ```
 
 3. Access the API:
@@ -86,7 +121,7 @@ Process documents and answer questions:
 
 ```bash
 curl -X POST "http://localhost:8000/hackrx/run" \
-  -H "Authorization: Bearer 679b076ea66e474132c8ea9edcfd3fd06a608834c6ab98900d1bec673ed9fe3c" \
+  -H "Authorization: Bearer ${BEARER_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
     "documents": "https://example.com/policy.pdf",
@@ -95,6 +130,18 @@ curl -X POST "http://localhost:8000/hackrx/run" \
       "What is the waiting period for pre-existing diseases?"
     ]
   }'
+```
+
+**Using ngrok for external testing:**
+```bash
+# Start ngrok (in a separate terminal)
+ngrok http 8000
+
+# Update your .env file with the ngrok URL
+echo "NGROK_URL=https://your-ngrok-url.ngrok-free.app" >> .env
+
+# Test with the provided script
+./test.sh
 ```
 
 ### Response Format
@@ -203,6 +250,9 @@ curl -X POST "http://localhost:8000/hackrx/run" \
 ## Development & Testing
 
 ```bash
+# Set environment variables first
+source .env
+
 # Run tests
 python test_api.py
 
@@ -210,7 +260,10 @@ python test_api.py
 curl http://localhost:8000/health
 
 # Get performance metrics
-curl -H "Authorization: Bearer TOKEN" http://localhost:8000/stats
+curl -H "Authorization: Bearer ${BEARER_TOKEN}" http://localhost:8000/stats
+
+# Test with shell script (requires NGROK_URL in .env)
+./test.sh
 ```
 
 ## Troubleshooting
@@ -218,9 +271,22 @@ curl -H "Authorization: Bearer TOKEN" http://localhost:8000/stats
 **Common Issues:**
 
 1. **Database Connection**: Ensure PostgreSQL is running and credentials are correct
-2. **Pinecone Errors**: Verify API key and index configuration
-3. **GPT-4 Limits**: Check OpenAI account limits and billing
-4. **Memory Issues**: Monitor RAM usage during document processing
+   - On macOS with Homebrew: Check that your PostgreSQL user matches your system username
+   - Verify database exists: `psql -l` to list databases
+   
+2. **Environment Variables**: All required variables must be set in `.env`
+   - Copy from `.env.example` and fill in your actual values
+   - Required: `OPENAI_API_KEY`, `PINECONE_API_KEY`, `PINECONE_ENVIRONMENT`, `PINECONE_INDEX_NAME`, `POSTGRES_*`, `BEARER_TOKEN`
+   
+3. **Pinecone Errors**: Verify API key and index configuration
+   - Check Pinecone dashboard for correct environment and index name
+   - Ensure index dimension matches embedding model (1536 for text-embedding-3-small)
+   
+4. **GPT-4 Limits**: Check OpenAI account limits and billing
+   
+5. **Memory Issues**: Monitor RAM usage during document processing
+   
+6. **Bearer Token Authentication**: Make sure `BEARER_TOKEN` is set correctly in both `.env` and when making requests
 
 **Performance Optimization:**
 
@@ -241,11 +307,19 @@ Built-in monitoring includes:
 
 ## Security
 
-- Bearer token authentication
-- Input validation and sanitization
-- SQL injection protection
-- Rate limiting capabilities
-- Audit logging
+- **Environment Variables**: All sensitive data (API keys, passwords, tokens) stored in `.env` file
+- **Bearer Token Authentication**: Secure API access with configurable tokens
+- **Input Validation**: Pydantic models for request/response validation
+- **SQL Injection Protection**: SQLAlchemy ORM with parameterized queries
+- **Rate Limiting**: Configurable request limits
+- **Audit Logging**: Performance and usage tracking in PostgreSQL
+
+**Security Best Practices:**
+- Never commit `.env` files to version control
+- Use strong, unique bearer tokens
+- Regularly rotate API keys
+- Monitor usage and access logs
+- Use HTTPS in production environments
 
 ## License
 

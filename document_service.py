@@ -161,9 +161,12 @@ class DocumentService:
                         pinecone_id=vector_id,
                         chunk_metadata=doc['metadata']
                     )
+                
+                # Store doc_record.id before session closes
+                document_id = doc_record.id
             
             return {
-                'document_id': doc_record.id,
+                'document_id': document_id,
                 'chunks_processed': len(documents),
                 'cached': False
             }

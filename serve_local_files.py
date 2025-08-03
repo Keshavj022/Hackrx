@@ -8,9 +8,9 @@ from threading import Thread
 import time
 
 class FileServer:
-    def __init__(self, directory="data", port=8001):
-        self.directory = directory
-        self.port = port
+    def __init__(self, directory=None, port=None):
+        self.directory = directory or os.environ.get("FILE_SERVER_DIR", "data")
+        self.port = port or int(os.environ.get("FILE_SERVER_PORT", "8001"))
         self.httpd = None
         
     def start(self):

@@ -5,9 +5,10 @@ import requests
 import json
 import time
 import sys
+import os
 
-BASE_URL = "http://localhost:8000"
-BEARER_TOKEN = "679b076ea66e474132c8ea9edcfd3fd06a608834c6ab98900d1bec673ed9fe3c"
+BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000")
+BEARER_TOKEN = os.environ.get("BEARER_TOKEN", "")
 
 headers = {
     "Authorization": f"Bearer {BEARER_TOKEN}",
