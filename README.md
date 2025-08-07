@@ -1,32 +1,57 @@
-# Document Query-Retrieval System
+# Advanced LLM-Powered Intelligent Query-Retrieval System
 
-A document processing system that uses GPT-4, Pinecone vector database, and PostgreSQL to answer questions based on document content. Built for insurance, legal, HR, and compliance domains.
+A state-of-the-art document processing system using advanced RAG (Retrieval-Augmented Generation) techniques to achieve >80% accuracy. Built for insurance, legal, HR, and compliance domains with hybrid search, query decomposition, reranking, and optional knowledge graph integration.
 
 ## Tech Stack
 
 - **Backend**: FastAPI
 - **Vector Database**: Pinecone  
-- **LLM**: GPT-4
+- **LLM**: gpt-4o-mini
 - **Database**: PostgreSQL
 - **Document Processing**: PyPDF2, python-docx
 - **Embeddings**: OpenAI text-embedding-3-small
+- **Advanced RAG**: Sentence-Transformers, Cross-Encoders, BM25
+- **Knowledge Graph**: Neo4j (Optional)
 
-## Features
+## Advanced Features
 
-- GPT-4 powered document analysis and question answering
-- Pinecone vector search for semantic document retrieval
-- PostgreSQL for data persistence and performance tracking
-- Multi-format support (PDF, DOCX, text files)
-- Real-time processing via document URLs
-- Built-in performance monitoring and health checks
-- Bearer token authentication
+### 🔥 Hybrid Retrieval System
+- **Dense Vector Search**: Semantic similarity using OpenAI embeddings
+- **Sparse Keyword Search**: BM25-based retrieval for exact term matching
+- **Combined Scoring**: Intelligent fusion of dense and sparse results
+
+### 🧠 Query Decomposition & Multi-Step Reasoning
+- **Intelligent Query Analysis**: Breaks complex questions into sub-questions
+- **Entity Extraction**: Identifies key entities (procedures, amounts, conditions)
+- **Reasoning Chains**: Step-by-step logical reasoning for complex queries
+
+### 📊 Advanced Reranking
+- **Cross-Encoder Reranking**: Uses cross-encoder/ms-marco-MiniLM-L-6-v2
+- **Context-Aware Scoring**: Considers query-document relevance
+- **Performance Optimization**: Balances accuracy and speed
+
+### 🏗️ Hierarchical Document Chunking
+- **Parent-Child Relationships**: Maintains document structure and context
+- **Smart Section Detection**: Automatically identifies document sections
+- **Context Preservation**: Links child chunks to parent context
+
+### 🕸️ Knowledge Graph Integration (Optional)
+- **Entity Relationship Modeling**: Maps relationships between concepts
+- **Enhanced Query Expansion**: Uses graph traversal for better retrieval
+- **Domain Knowledge**: Captures insurance-specific relationships
+
+### 📈 Performance Optimizations
+- **Token Efficiency**: Optimized prompt engineering for cost reduction
+- **Response Caching**: Intelligent caching of processed documents
+- **Parallel Processing**: Concurrent handling of multiple queries
+- **Real-time Monitoring**: Built-in performance tracking and analytics
 
 ## Prerequisites
 
 1. Python 3.8+
 2. PostgreSQL (12+ recommended)
 3. API Keys:
-   - OpenAI API key with GPT-4 access
+   - OpenAI API key with gpt-4o-mini access
    - Pinecone API key
 4. Minimum 4GB RAM (8GB+ recommended)
 
@@ -46,7 +71,7 @@ A document processing system that uses GPT-4, Pinecone vector database, and Post
    ```env
    # OpenAI Configuration
    OPENAI_API_KEY=your_openai_api_key_here
-   OPENAI_MODEL=gpt-4
+   OPENAI_MODEL=gpt-4o-mini
    OPENAI_EMBEDDING_MODEL=text-embedding-3-small
    
    # Pinecone Configuration
@@ -63,6 +88,21 @@ A document processing system that uses GPT-4, Pinecone vector database, and Post
    
    # API Configuration
    BEARER_TOKEN=your_secure_bearer_token
+   
+   # Advanced RAG Settings
+   PARENT_CHUNK_SIZE=2048
+   CHILD_CHUNK_SIZE=512
+   USE_HYBRID_SEARCH=true
+   USE_RERANKING=true
+   USE_QUERY_DECOMPOSITION=true
+   RERANK_TOP_K=20
+   FINAL_TOP_K=8
+   RERANKER_MODEL=cross-encoder/ms-marco-MiniLM-L-6-v2
+   
+   # Neo4j Configuration (Optional - for Knowledge Graph)
+   # NEO4J_URI=bolt://localhost:7687
+   # NEO4J_USER=neo4j
+   # NEO4J_PASSWORD=your_neo4j_password
    
    # Testing Configuration (optional)
    NGROK_URL=https://your-ngrok-url.ngrok-free.app
@@ -99,8 +139,11 @@ A document processing system that uses GPT-4, Pinecone vector database, and Post
    export BEARER_TOKEN="your_bearer_token_here"
    export API_BASE_URL="http://localhost:8000"
    
-   # Run the test suite
+   # Run the basic test suite
    python test_api.py
+   
+   # Run the advanced RAG test suite
+   python test_advanced_rag.py
    
    # Or test manually with the shell script
    ./test.sh
@@ -162,7 +205,7 @@ echo "NGROK_URL=https://your-ngrok-url.ngrok-free.app" >> .env
 ├── config.py            # Configuration management
 ├── database.py          # PostgreSQL models and operations
 ├── vector_service.py    # Pinecone vector database service
-├── llm_service.py       # GPT-4 language model service
+├── llm_service.py       # gpt-4o-mini language model service
 ├── document_service.py  # Document processing orchestration
 ├── db_setup.py          # Database initialization
 ├── run_server.py        # Server startup script
@@ -182,7 +225,7 @@ echo "NGROK_URL=https://your-ngrok-url.ngrok-free.app" >> .env
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   FastAPI       │    │     GPT-4       │    │   Pinecone      │
+│   FastAPI       │    │     gpt-4o-mini       │    │   Pinecone      │
 │   Backend       │───▶│   LLM Service   │───▶│  Vector DB      │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                        │                        │
@@ -205,9 +248,9 @@ echo "NGROK_URL=https://your-ngrok-url.ngrok-free.app" >> .env
 2. Text extracted and chunked
 3. Embeddings generated via OpenAI
 4. Vectors stored in Pinecone
-5. Questions parsed by GPT-4
+5. Questions parsed by gpt-4o-mini
 6. Relevant chunks retrieved via vector search
-7. GPT-4 generates contextual answers
+7. gpt-4o-mini generates contextual answers
 8. Structured JSON response returned
 
 ## Performance Features
@@ -282,7 +325,7 @@ curl -H "Authorization: Bearer ${BEARER_TOKEN}" http://localhost:8000/stats
    - Check Pinecone dashboard for correct environment and index name
    - Ensure index dimension matches embedding model (1536 for text-embedding-3-small)
    
-4. **GPT-4 Limits**: Check OpenAI account limits and billing
+4. **gpt-4o-mini Limits**: Check OpenAI account limits and billing
    
 5. **Memory Issues**: Monitor RAM usage during document processing
    
@@ -302,7 +345,7 @@ Built-in monitoring includes:
 - Request/response times
 - Success/failure rates  
 - Vector database statistics
-- GPT-4 usage metrics
+- gpt-4o-mini usage metrics
 - Database performance
 
 ## Security

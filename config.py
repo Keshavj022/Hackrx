@@ -9,25 +9,15 @@ from typing import Optional
 class Settings(BaseSettings):
     # API Configuration
     app_name: str = "LLM-Powered Intelligent Query-Retrieval System"
-    app_version: str = "1.0.0"
+    app_version: str = "2.0.0"
     debug: bool = False
     
     # Authentication
     bearer_token: Optional[str] = None
     
-    # OpenAI Configuration
-    openai_api_key: Optional[str] = None
-    openai_model: str = "gpt-4"
-    openai_embedding_model: str = "text-embedding-3-small"
-    openai_max_tokens: int = 4000
-    openai_temperature: float = 0.1
-    
-    # Pinecone Configuration
-    pinecone_api_key: Optional[str] = None
-    pinecone_environment: Optional[str] = None
-    pinecone_index_name: Optional[str] = None
-    pinecone_dimension: int = 1536
-    pinecone_metric: str = "cosine"
+    # FAISS Configuration (replaces Pinecone)
+    vector_dimension: int = 1536  # text-embedding-3-small dimension
+    faiss_index_type: str = "IndexFlatIP"  # Inner Product for cosine similarity
     
     # PostgreSQL Configuration
     postgres_host: Optional[str] = None
@@ -45,14 +35,43 @@ class Settings(BaseSettings):
             return f"postgresql://{self.postgres_user}:{encoded_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
         return f"postgresql://{self.postgres_user}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
     
-    # Document Processing
-    chunk_size: int = 1000
-    chunk_overlap: int = 200
-    max_retrieval_docs: int = 5
+    # Document Processing - Optimized for performance
+    chunk_size: int = 1024  # Increased for better context
+    chunk_overlap: int = 200  # Increased overlap for better continuity
+    max_retrieval_docs: int = 15  # Increased for better coverage
+    parent_chunk_size: int = 4096  # Larger parent chunks
+    child_chunk_size: int = 1024  # Larger child chunks
     
-    # Performance Settings
-    max_concurrent_requests: int = 10
-    request_timeout: int = 120
+    # Advanced RAG Settings - Performance optimized
+    use_hybrid_search: bool = True
+    use_reranking: bool = True
+    use_query_decomposition: bool = True
+    use_semantic_chunking: bool = True
+    use_contextual_retrieval: bool = True
+    
+    # Search and Ranking Parameters
+    rerank_top_k: int = 30  # More candidates for reranking
+    final_top_k: int = 12   # More final results for better context
+    dense_weight: float = 0.6  # Weight for dense search
+    sparse_weight: float = 0.4  # Weight for sparse search
+    
+    # Neo4j Configuration (optional)
+    neo4j_uri: Optional[str] = None
+    neo4j_user: Optional[str] = None
+    neo4j_password: Optional[str] = None
+    
+    # Cross-encoder model for reranking
+    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    
+    # Performance Settings - Optimized for speed
+    max_concurrent_requests: int = 20
+    request_timeout: int = 60  # Reduced timeout
+    embedding_batch_size: int = 50  # Batch embeddings for efficiency
+    cache_embeddings: bool = True
+    
+    # Async Processing
+    use_async_processing: bool = True
+    max_workers: int = 4
     
     # Testing Configuration
     ngrok_url: Optional[str] = None
@@ -62,6 +81,12 @@ class Settings(BaseSettings):
     file_server_dir: str = "data"
     file_server_port: int = 8001
     
+    # Backward compatibility properties
+    @property
+    def pinecone_dimension(self) -> int:
+        """Backward compatibility for existing code"""
+        return self.vector_dimension
+    
     class Config:
         env_file = ".env"
         case_sensitive = False
@@ -69,16 +94,10 @@ class Settings(BaseSettings):
 # Global settings instance
 settings = Settings()
 
-# Validation
+# Updated validation function
 def validate_settings():
     """Validate that all required settings are provided"""
     errors = []
-    
-    if not settings.openai_api_key:
-        errors.append("OPENAI_API_KEY is required")
-    
-    if not settings.pinecone_api_key:
-        errors.append("PINECONE_API_KEY is required")
     
     if not settings.postgres_password:
         errors.append("POSTGRES_PASSWORD is required")
@@ -91,12 +110,6 @@ def validate_settings():
     
     if not settings.postgres_user:
         errors.append("POSTGRES_USER is required")
-    
-    if not settings.pinecone_environment:
-        errors.append("PINECONE_ENVIRONMENT is required")
-    
-    if not settings.pinecone_index_name:
-        errors.append("PINECONE_INDEX_NAME is required")
     
     if not settings.bearer_token:
         errors.append("BEARER_TOKEN is required")

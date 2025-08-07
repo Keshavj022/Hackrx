@@ -18,7 +18,7 @@ if [ -z "$NGROK_URL" ]; then
     exit 1
 fi
 
-curl -X POST "${NGROK_URL}/hackrx/run" \
+curl -X POST "${NGROK_URL}/api/v1/hackrx/run" \
 -H "Authorization: Bearer ${BEARER_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
@@ -30,4 +30,4 @@ curl -X POST "${NGROK_URL}/hackrx/run" \
         "What is the sum insured amount?",
         "What are the exclusions in this policy?"
     ]
-}'
+}' 2>/dev/null
